@@ -1,0 +1,1 @@
+python3 bootstrap_users.py
