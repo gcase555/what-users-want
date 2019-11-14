@@ -1,12 +1,11 @@
 import datetime
 import os
 import urllib.parse
-# import peeweedbevolve
 
 from flask_admin import AdminIndexView
 from flask_admin.contrib.peewee import ModelView
 from flask_login import current_user
-from flask_security import PeeweeUserDatastore, \
+from flask_security import Security, PeeweeUserDatastore, \
     UserMixin, RoleMixin
 from peewee import *
 
@@ -48,11 +47,11 @@ class User(BaseModel, UserMixin):
     confirmed_at = DateTimeField(null=True)
 
 class UserMeta(BaseModel):
-    user = ForeignKeyField(User, backref='user-meta')
+    user = ForeignKeyField(User, related_name='user-meta')
     profession = TextField(null=True)
     age = IntegerField(null=True)
-    country = CharField()
-    city = CharField()
+    country = CharField(null=True)
+    city = CharField(null=True)
     state = CharField(null=True)
 
 class Role(BaseModel, RoleMixin):
@@ -75,50 +74,66 @@ class Product(BaseModel):
     max_sentiment_total = IntegerField(default=50)
     max_user_votes_total = IntegerField(default=40)
 
+class ProductQuestionare(BaseModel):
+    user = ForeignKeyField(User)
+    product = ForeignKeyField(Product)
+    score = DecimalField()
+
+class ProductQuestion(BaseModel):
+    user = ForeignKeyField(User)
+    product = ForeignKeyField(Product)
+    questionare = ForeignKeyField(ProductQuestionare)
+    question = CharField()
+    text_answer = TextField(null=True)
+    num_answer = DecimalField(null=True)
+
 class UserProductSentiment(BaseModel):
     user = ForeignKeyField(User, related_name='product')
     product = ForeignKeyField(User, related_name='user')
-    created_at = peewee.DateTimeField(default=datetime.datetime.now, index=True)
-    updated_at = peewee.DateTimeField(default=datetime.datetime.now, index=True)
-    total = IntegerField()
+    created_at = DateTimeField(default=datetime.datetime.now, index=True)
+    updated_at = DateTimeField(default=datetime.datetime.now, index=True)
+    score = DecimalField()
 
 
 class Feature(BaseModel):
-    product = ForeignKeyField(Product, backref='feature')
-    created_at = peewee.DateTimeField(default=datetime.datetime.now, index=True)
-    updated_at = peewee.DateTimeField(default=datetime.datetime.now, index=True)
+    product = ForeignKeyField(Product, related_name='feature')
+    created_at = DateTimeField(default=datetime.datetime.now, index=True)
+    updated_at = DateTimeField(default=datetime.datetime.now, index=True)
     name = CharField()
+    status = CharField(null=True)
+    publish = BooleanField(default=True)
     description = TextField(null=True)    
-    current_score = IntegerField(null=True)
+    current_score = DecimalField(null=True)
 
-class Tag(BaseModel)
+class Tag(BaseModel):
     name = CharField()
 
-class FeatureTags(BaseModel)
+class FeatureTags(BaseModel):
     feature = ForeignKeyField(Feature, related_name='tags')
     tag = ForeignKeyField(Tag, related_name='features')
     name = property(lambda self: self.tag.name)
 
-class UserFeatureVotes(BaseModel):
-    user = ForeignKeyField(User, backref='feature-points')
-    product = ForeignKeyField(Product, backref='feature-points')
-    feature = ForeignKeyField(Feature, backref='feature-points')
-    created_at = peewee.DateTimeField(default=datetime.datetime.now, index=True)
-    updated_at = peewee.DateTimeField(default=datetime.datetime.now, index=True)
+class UserFeatureVote(BaseModel):
+    user = ForeignKeyField(User, related_name='feature-points')
+    product = ForeignKeyField(Product, related_name='feature-points')
+    feature = ForeignKeyField(Feature, related_name='feature-points')
+    created_at = DateTimeField(default=datetime.datetime.now, index=True)
+    updated_at = DateTimeField(default=datetime.datetime.now, index=True)
     user_voted = property(lambda self: self.user.email)
     product_voted = property(lambda self: self.product.name)
     feature_voted = property(lambda self: self.feature.name)
     vote_points = IntegerField(index=True)
-    text = CharField(max_length=300)
+    comment = CharField(max_length=300)
+    publish = BooleanField()
 
 class UserProductVoteScores(BaseModel):
-    user = ForeignKeyField(User, backref='user-product-points')
-    product = ForeignKeyField(Product, backref='user-product-points')
-    created_at = peewee.DateTimeField(default=datetime.datetime.now, index=True)
-    updated_at = peewee.DateTimeField(default=datetime.datetime.now, index=True)
+    user = ForeignKeyField(User, related_name='user-product-points')
+    product = ForeignKeyField(Product, related_name='user-product-points')
+    created_at = DateTimeField(default=datetime.datetime.now, index=True)
+    updated_at = DateTimeField(default=datetime.datetime.now, index=True)
     user_voted = property(lambda self: self.user.email)
     product_voted = property(lambda self: self.product.name)
-    current_score = IntegerField()
+    current_score = DecimalField(null=True)
     max_score = property(lambda self: self.product.max_user_votes_total)
 
 class ModelView(ModelView):
@@ -128,17 +143,18 @@ class ModelView(ModelView):
 
 class MyAdminIndex(AdminIndexView):
     def is_accessible(self):
-        return current_user.has_role('admin')
+        print('logging in', current_user)
+        return True
 
 
 user_datastore = PeeweeUserDatastore(DATABASE, User, Role, UserRoles)
 
 def initialize():
-    DATABASE.get_conn()
-    DATABASE.create_tables([User, Role, UserRoles, UserProductVoteScores, FeatureTags, Tag, Feature, UserProductSentiment, Product], safe=True)
+    # DATABASE.get_conn()
+    DATABASE.create_tables([User, Role, UserRoles, UserProductVoteScores, FeatureTags, Tag, Feature, UserProductSentiment, Product, ProductQuestionare, ProductQuestion], safe=True)
     # # Switch this line out for create_tables in order to do a database migration,
     # # set interactive to TRUE only once you have verified the change wont break prod
-    # # DATABASE.evolve(interactive=False)
+    #DATABASE.evolve(interactive=False)
     # DATABASE.close()
 def clean_up():
     DATABASE.close()
