@@ -143,8 +143,7 @@ class ModelView(ModelView):
 
 class MyAdminIndex(AdminIndexView):
     def is_accessible(self):
-        print('logging in', current_user)
-        return True
+        return current_user.is_authenticated
 
 
 user_datastore = PeeweeUserDatastore(DATABASE, User, Role, UserRoles)
