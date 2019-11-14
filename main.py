@@ -16,7 +16,6 @@ PORT = 8001
 app = Flask(__name__)
 # TODO: Set this in prod before deploying
 app.config['SECRET_KEY'] = os.environ['FLASK_SECRET']
-#app.register_blueprint(content_api, url_prefix='/api/v1')
 #app.register_blueprint(tweet_api, url_prefix='/api/v1')
 # TODO: Set this in prod before deploying
 app.config['SECURITY_PASSWORD_SALT'] = os.environ['DB_SALT']
@@ -26,7 +25,14 @@ security = Security(app, models.user_datastore)
 
 #TODO: FIXME add models here
 admin = admin.Admin(app, name='feature-dashboard', index_view=models.MyAdminIndex())
-admin.add_view(ModelView(models.Tag))
+admin.add_view(ModelView(models.UserFeatureVote, category="Feature"))
+admin.add_view(models.FeatureModelView(models.Feature, category="Feature"))
+admin.add_view(ModelView(models.Tag, category="Tags"))
+admin.add_view(ModelView(models.FeatureTags, category="Tags"))
+admin.add_view(ModelView(models.Product, category="Product"))
+admin.add_view(ModelView(models.UserProductSentiment, category="Product"))
+admin.add_view(ModelView(models.UserProductVoteScores, category="Product"))
+admin.add_view(ModelView(models.UserMeta, category="User"))
 
 
 @app.before_request
@@ -50,7 +56,6 @@ def login():
     return redirect('/admin')
 
 @app.route('/')
-@login_required
 def welcome():
     return 'Welcome!'
 

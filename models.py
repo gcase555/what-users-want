@@ -41,6 +41,8 @@ class BaseModel(Model):
         database = DATABASE
 
 class User(BaseModel, UserMixin):
+    def __repr__(self):
+        return self.email
     email = CharField(unique=True, index=True)
     password = CharField()
     active = BooleanField(default=True)
@@ -69,6 +71,8 @@ class UserRoles(BaseModel):
 
 
 class Product(BaseModel):
+    def __repr__(self):
+        return self.name
     name = CharField(unique=True)
     description = TextField(null=True)
     max_sentiment_total = IntegerField(default=50)
@@ -89,13 +93,15 @@ class ProductQuestion(BaseModel):
 
 class UserProductSentiment(BaseModel):
     user = ForeignKeyField(User, related_name='product')
-    product = ForeignKeyField(User, related_name='user')
+    product = ForeignKeyField(Product, related_name='user')
     created_at = DateTimeField(default=datetime.datetime.now, index=True)
     updated_at = DateTimeField(default=datetime.datetime.now, index=True)
     score = DecimalField()
 
 
 class Feature(BaseModel):
+    def __repr__(self):
+        return self.name
     product = ForeignKeyField(Product, related_name='feature')
     created_at = DateTimeField(default=datetime.datetime.now, index=True)
     updated_at = DateTimeField(default=datetime.datetime.now, index=True)
@@ -106,6 +112,8 @@ class Feature(BaseModel):
     current_score = DecimalField(null=True)
 
 class Tag(BaseModel):
+    def __repr__(self):
+        return self.name
     name = CharField()
 
 class FeatureTags(BaseModel):
@@ -136,21 +144,32 @@ class UserProductVoteScores(BaseModel):
     current_score = DecimalField(null=True)
     max_score = property(lambda self: self.product.max_user_votes_total)
 
-class ModelView(ModelView):
+class FeatureModelView(ModelView):
+    form_columns = ('product', 'name', 'description')
+    column_exclude_list = ('updated_at')
+    column_list = ('name', 'product', 'status', 'current_score')
+    column_searchable_list = ('name', 'description')
     def is_accessible(self):
         return current_user.is_authenticated
-
 
 class MyAdminIndex(AdminIndexView):
     def is_accessible(self):
-        return current_user.is_authenticated
+        return current_user.has_role('admin')
+
+class UserView(ModelView):
+    def is_accessible(self):
+        return current_user.has_role('admin')
 
 
 user_datastore = PeeweeUserDatastore(DATABASE, User, Role, UserRoles)
 
 def initialize():
     # DATABASE.get_conn()
-    DATABASE.create_tables([User, Role, UserRoles, UserProductVoteScores, FeatureTags, Tag, Feature, UserProductSentiment, Product, ProductQuestionare, ProductQuestion], safe=True)
+    DATABASE.create_tables([
+        User, UserMeta, Role, UserRoles, UserProductVoteScores,
+        FeatureTags, Tag, Feature, UserProductSentiment, Product,
+        ProductQuestionare, ProductQuestion, UserFeatureVote
+        ], safe=True)
     # # Switch this line out for create_tables in order to do a database migration,
     # # set interactive to TRUE only once you have verified the change wont break prod
     #DATABASE.evolve(interactive=False)
