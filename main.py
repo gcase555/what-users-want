@@ -8,6 +8,7 @@ from werkzeug.utils import redirect
 
 import models
 from models import ModelView
+from resources.features import feature_api
 
 DEBUG = os.environ['FLASK_DEBUG']
 HOST = '0.0.0.0'
@@ -16,7 +17,7 @@ PORT = 8001
 app = Flask(__name__)
 # TODO: Set this in prod before deploying
 app.config['SECRET_KEY'] = os.environ['FLASK_SECRET']
-#app.register_blueprint(tweet_api, url_prefix='/api/v1')
+app.register_blueprint(feature_api, url_prefix='/api/v1')
 # TODO: Set this in prod before deploying
 app.config['SECURITY_PASSWORD_SALT'] = os.environ['DB_SALT']
 #TODO: FIXME with CORS
