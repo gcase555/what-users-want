@@ -1,4 +1,6 @@
-The goal of this system is to create a new system for feature requests. Many companies use ticketing systems for this but their not designed for capturing user sentiment about features they want and end up with many duplicate tickets. Users have no way of communicating how much they desire a feature, it's only done through binary upvotes/downvotes, "likes", or a bunch of +1 responses inside comments.
+## What Users Want
+
+The goal of this project is to create a new system for feature requests. Many companies use ticketing systems for this but their not designed for capturing user sentiment about features they want and end up with many duplicate tickets. Users have no way of communicating how much they desire a feature, it's only done through binary upvotes/downvotes, "likes", or a bunch of +1 responses inside comments.
 
 The goal of what users want is to provide a system where users can vote from 0-10 how much they desire a feature and limit how much they can vote per month to encourage prioritization 
 
