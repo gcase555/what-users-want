@@ -132,7 +132,7 @@ class UserFeatureVote(BaseModel):
     feature_voted = property(lambda self: self.feature.name)
     vote_points = IntegerField(index=True)
     comment = CharField(max_length=300)
-    publish = BooleanField()
+    publish = BooleanField(default=True)
 
 class UserProductVoteScores(BaseModel):
     user = ForeignKeyField(User, related_name='user-product-points')
@@ -149,6 +149,13 @@ class FeatureModelView(ModelView):
     column_exclude_list = ('updated_at')
     column_list = ('name', 'product', 'status', 'current_score')
     column_searchable_list = ('name', 'description')
+    def is_accessible(self):
+        return current_user.is_authenticated
+
+class UserFeatureVoteModelView(ModelView):
+    form_columns = ('user', 'product', 'comment', 'feature', 'vote_points')
+    column_list = ('user', 'product', 'comment', 'feature', 'vote_points')
+    column_exclude_list = ('updated_at')
     def is_accessible(self):
         return current_user.is_authenticated
 

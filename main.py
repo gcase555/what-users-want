@@ -25,8 +25,8 @@ cors = CORS(app, resources={r"/INSERT_SOME_ROUTE/*": {"origins": "*"}})
 security = Security(app, models.user_datastore)
 
 #TODO: FIXME add models here
-admin = admin.Admin(app, name='feature-dashboard', index_view=models.MyAdminIndex())
-admin.add_view(ModelView(models.UserFeatureVote, category="Feature"))
+admin = admin.Admin(app, name='Feature Pulse', index_view=models.MyAdminIndex())
+admin.add_view(models.UserFeatureVoteModelView(models.UserFeatureVote, category="Feature"))
 admin.add_view(models.FeatureModelView(models.Feature, category="Feature"))
 admin.add_view(ModelView(models.Tag, category="Tags"))
 admin.add_view(ModelView(models.FeatureTags, category="Tags"))
